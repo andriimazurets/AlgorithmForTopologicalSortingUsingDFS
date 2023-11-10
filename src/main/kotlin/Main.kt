@@ -1,72 +1,118 @@
-fun main() {
-    // Create a new instance of the Graph class.
-    val graph = Graph()
+class Graph {
+    private val graphVertices = mutableMapOf<String, MutableList<String>>()
 
-    // Add edges to the graph, representing relationships between subjects.
-    graph.addEdge("Mathematics", "Programming")
-    graph.addEdge("Programming", "Algorithms")
-    graph.addEdge("Mathematics", "Physics")
-    graph.addEdge("Algorithms", "Database")
-    graph.addEdge("Algorithms", "IoT")
+    fun addEdge(from: String, to: String) {
+        graphVertices.getOrPut(from) { mutableListOf() }.add(to)
+        printGraphState(from, to)
+    }
 
-    // Perform topological sorting on the graph.
-    val topologicalOrder = graph.topologicalSort()
+    fun depthFirstSearch(startVertex: String) {
+        val visited = mutableSetOf<String>()
+        dfs(startVertex, visited)
+    }
 
-    // Print the result of topological sorting.
-    println("Topological sorting:")
-    topologicalOrder.forEachIndexed { index, subject ->
-        println("${index + 1}. $subject")
+    private fun dfs(vertex: String, visited: MutableSet<String>) {
+        visited.add(vertex)
+        println("Відвідуємо вершину: $vertex")
+
+        val neighbors = graphVertices[vertex] ?: emptyList()
+        for (neighbor in neighbors) {
+            if (neighbor !in visited) {
+                dfs(neighbor, visited)
+            }
+        }
+    }
+
+    private fun printGraphState(from: String, to: String) {
+        println("Додаємо до графа зв'язок: $from -> $to")
+        println("Поточні вершини графа:")
+        for ((vertex, neighbors) in graphVertices) {
+            println("$vertex -> $neighbors")
+        }
+        println()
+    }
+
+    // Інші методи тут
+
+    fun topologicalSort(): List<String> {
+        val visited = mutableSetOf<String>()
+        val result = mutableListOf<String>()
+
+        for (vertex in graphVertices.keys) {
+            if (vertex !in visited) {
+                initiateSort(vertex, visited, result)
+            }
+        }
+
+        val reversedResult = result.reversed()
+        printFinalState(visited, result, reversedResult)
+        return reversedResult
+    }
+
+    private fun initiateSort(vertex: String, visited: MutableSet<String>, result: MutableList<String>) {
+        visited.add(vertex)
+        printInitiateState(vertex, visited, result)
+
+        val neighbors = graphVertices[vertex] ?: emptyList()
+        for (neighbor in neighbors) {
+            if (neighbor !in visited) {
+                traverse(vertex, neighbor, visited, result)
+            }
+        }
+
+        result.add(vertex)
+        printAddVertexState(vertex, result)
+    }
+
+    private fun traverse(vertex: String, neighbor: String, visited: MutableSet<String>, result: MutableList<String>) {
+        printTraverseState(vertex, neighbor, visited, result)
+        initiateSort(neighbor, visited, result)
+    }
+
+    private fun printInitiateState(vertex: String, visited: MutableSet<String>, result: MutableList<String>) {
+        println("Ініціюємо топологічне сортування з вершини: $vertex")
+        println("Поточні відвідані вершини: $visited")
+        println("Поточний список результатів: $result")
+        println()
+    }
+
+    private fun printAddVertexState(vertex: String, result: MutableList<String>) {
+        println("Додано вершину $vertex до списку результатів")
+        println("Поточний список результатів: $result")
+        println()
+    }
+
+    private fun printTraverseState(vertex: String, neighbor: String, visited: MutableSet<String>, result: MutableList<String>) {
+        println("Переходимо від вершини $vertex до $neighbor")
+        println("Поточні відвідані вершини: $visited")
+        println("Поточний список результатів: $result")
+        println()
+    }
+
+    private fun printFinalState(visited: MutableSet<String>, result: List<String>, reversedResult: List<String>) {
+        println("Топологічне сортування завершено.")
+        println("Всі відвідані вершини: $visited")
+        println("Кінцевий список результатів: $result")
+        println("Відсортований список: ${reversedResult.joinToString(", ")}")
     }
 }
 
-class Graph {
-    // Create a mutable map to store vertices and their adjacency lists.
-    private val graphVertices = mutableMapOf<String, MutableList<String>>()
+fun main() {
+    val graph = Graph()
 
-    // Add an edge between two vertices.
-    fun addEdge(from: String, to: String) {
-        //  If 'from' vertex is not in the map, add it with an empty list.
-        //  Then, add the 'to' vertex to the adjacency list of 'from'.
-        graphVertices.getOrPut(from) { mutableListOf() }.add(to)
-    }
+    graph.addEdge("Математика", "Програмування")
+    graph.addEdge("Програмування", "Алгоритми")
+    graph.addEdge("Математика", "Фізика")
+    graph.addEdge("Алгоритми", "Бази даних")
+    graph.addEdge("Алгоритми", "ІoT")
 
-    // Perform topological sorting on the graph.
-    fun topologicalSort(): List<String> {
-        //  Create a set to track visited vertices during traversal.
-        val visited = mutableSetOf<String>()
+    println("Моделювання Depth-First Search:")
+    graph.depthFirstSearch("Математика")
 
-        //  Create a list to store the topologically sorted result.
-        val result = mutableListOf<String>()
+    val topologicalOrder = graph.topologicalSort()
 
-        // Iterate through all vertices in the graph.
-        for (vertex in graphVertices.keys) {
-            // If the vertex has not been visited, initiate a topological sort.
-            if (vertex !in visited) {
-                topologicalSortUtil(vertex, visited, result)
-            }
-        }
-
-        // Return the topologically sorted result in reverse order.
-        return result.reversed()
-    }
-
-    //  Recursive utility function for topological sorting.
-    private fun topologicalSortUtil(vertex: String, visited: MutableSet<String>, result: MutableList<String>) {
-        // Mark the current vertex as visited.
-        visited.add(vertex)
-
-        //  Get the neighbors (adjacency list) of the current vertex.
-        val neighbors = graphVertices[vertex] ?: emptyList()
-
-        //  Iterate through the neighbors.
-        for (neighbor in neighbors) {
-            //  If the neighbor has not been visited, recursively perform topological sort.
-            if (neighbor !in visited) {
-                topologicalSortUtil(neighbor, visited, result)
-            }
-        }
-
-        // Add the current vertex to the result list.
-        result.add(vertex)
+    println("Топологічне сортування:")
+    topologicalOrder.forEachIndexed { index, subject ->
+        println("${index + 1}. $subject")
     }
 }
